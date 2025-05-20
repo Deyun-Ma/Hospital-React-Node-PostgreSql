@@ -1,6 +1,6 @@
 import { users, patients, staff, appointments } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { startOfDay, endOfDay } from "date-fns";
 import createMemoryStore from "memorystore";
 import session from "express-session";
@@ -46,11 +46,11 @@ export interface IStorage {
   }>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Use any type to avoid the SessionStore type issue
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any type to avoid the SessionStore type issue
   
   constructor() {
     this.sessionStore = new MemoryStore({
@@ -261,16 +261,17 @@ export class DatabaseStorage implements IStorage {
     appointmentCount: number;
     bedOccupancy: number;
   }> {
+    // Using SQL count(*) directly for more reliable counting
     const patientCountResult = await db
-      .select({ count: db.fn.count() })
+      .select({ count: sql`count(*)` })
       .from(patients);
     
     const staffCountResult = await db
-      .select({ count: db.fn.count() })
+      .select({ count: sql`count(*)` })
       .from(staff);
     
     const appointmentCountResult = await db
-      .select({ count: db.fn.count() })
+      .select({ count: sql`count(*)` })
       .from(appointments);
     
     // Safely parse count results, defaulting to 0 if invalid
