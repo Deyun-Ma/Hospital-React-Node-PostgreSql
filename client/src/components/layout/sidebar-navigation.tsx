@@ -15,14 +15,47 @@ export function SidebarNavigation({ className }: SidebarProps) {
     logoutMutation.mutate();
   };
 
-  const navItems = [
+  // Define base navigation items - available to all roles
+  const baseNavItems = [
     { href: "/", label: "Dashboard", icon: "ri-dashboard-line" },
     { href: "/patients", label: "Patients", icon: "ri-user-heart-line" },
-    { href: "/staff", label: "Staff", icon: "ri-nurse-line" },
     { href: "/appointments", label: "Appointments", icon: "ri-calendar-check-line" },
-    { href: "/reports", label: "Reports", icon: "ri-file-chart-line" },
     { href: "/settings", label: "Settings", icon: "ri-settings-4-line" },
   ];
+  
+  // Define admin-only navigation items
+  const adminNavItems = [
+    { href: "/staff", label: "Staff", icon: "ri-nurse-line" },
+    { href: "/reports", label: "Reports", icon: "ri-file-chart-line" },
+  ];
+  
+  // Define doctor-specific navigation items
+  const doctorNavItems = [
+    { href: "/prescriptions", label: "Prescriptions", icon: "ri-medicine-bottle-line", adminVisible: true },
+  ];
+  
+  // Combine navigation items based on user role
+  const isAdmin = user?.role === 'admin';
+  const isDoctor = user?.role === 'doctor';
+  
+  let navItems = [...baseNavItems];
+  
+  // Add admin items if user is an admin
+  if (isAdmin) {
+    navItems = [...baseNavItems, ...adminNavItems];
+  }
+  
+  // Add doctor items if user is a doctor, or include them for admins as well
+  if (isDoctor || isAdmin) {
+    navItems = [...navItems, ...doctorNavItems.filter(item => isAdmin ? item.adminVisible : true)];
+  }
+  
+  // Sort them based on the original order
+  navItems.sort((a, b) => {
+    const aIndex = [...baseNavItems, ...adminNavItems, ...doctorNavItems].findIndex(item => item.href === a.href);
+    const bIndex = [...baseNavItems, ...adminNavItems, ...doctorNavItems].findIndex(item => item.href === b.href);
+    return aIndex - bIndex;
+  });
 
   return (
     <aside className={cn("bg-white shadow-md flex flex-col w-64 transition-all duration-300", className)}>

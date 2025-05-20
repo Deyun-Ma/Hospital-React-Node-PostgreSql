@@ -8,9 +8,18 @@ import { MobileNavigation } from '@/components/layout/mobile-navigation';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { ActivityCard } from '@/components/dashboard/activity-card';
 import { AppointmentTable } from '@/components/dashboard/appointment-table';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const { user } = useAuth();
+  
+  // Determine user role
+  const isAdmin = user?.role === 'admin';
+  const isDoctor = user?.role === 'doctor';
+  const isNurse = user?.role === 'nurse';
+  const isReceptionist = user?.role === 'receptionist';
 
   // Stats query
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -137,39 +146,148 @@ export default function DashboardPage() {
             <p className="text-neutral-medium">Hospital overview and statistics</p>
           </div>
           
-          {/* Dashboard stats */}
+          {/* Role-specific welcome banner */}
+          <div className="bg-white shadow-sm rounded-lg p-4 mb-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+              <div>
+                <h2 className="text-xl font-medium text-primary">
+                  {isAdmin && "Welcome, Administrator"}
+                  {isDoctor && "Welcome, Doctor"}
+                  {isNurse && "Welcome, Nurse"}
+                  {isReceptionist && "Welcome, Receptionist"}
+                </h2>
+                <p className="text-neutral-medium mt-1">
+                  {isAdmin && "You have full access to manage the hospital system"}
+                  {isDoctor && "Manage your patients and appointments for today"}
+                  {isNurse && "View assigned patients and upcoming tasks"}
+                  {isReceptionist && "Manage appointments and patient registrations"}
+                </p>
+              </div>
+              <div className="mt-3 md:mt-0">
+                {isAdmin && (
+                  <Button className="flex items-center">
+                    <i className="ri-shield-check-line mr-2"></i>
+                    System Status
+                  </Button>
+                )}
+                {isDoctor && (
+                  <Button className="flex items-center">
+                    <i className="ri-stethoscope-line mr-2"></i>
+                    View My Patients
+                  </Button>
+                )}
+                {isNurse && (
+                  <Button className="flex items-center">
+                    <i className="ri-clipboard-line mr-2"></i>
+                    View Assignments
+                  </Button>
+                )}
+                {isReceptionist && (
+                  <Button className="flex items-center">
+                    <i className="ri-calendar-line mr-2"></i>
+                    New Appointment
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Dashboard stats - different stats for different roles */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* All users see Patients stat */}
             <StatCard 
               title="Total Patients" 
-              value={statsLoading ? "—" : stats?.patientCount.toLocaleString()} 
+              value={statsLoading ? "—" : stats?.patientCount?.toLocaleString() ?? "0"} 
               icon="ri-user-heart-line" 
               iconColor="primary"
               trend={{ value: 5.2, isPositive: true }}
             />
             
-            <StatCard 
-              title="Staff Members" 
-              value={statsLoading ? "—" : stats?.staffCount.toLocaleString()} 
-              icon="ri-nurse-line" 
-              iconColor="secondary"
-              trend={{ value: 1.8, isPositive: true }}
-            />
+            {/* Admin and receptionist see staff count */}
+            {(isAdmin || isReceptionist) && (
+              <StatCard 
+                title="Staff Members" 
+                value={statsLoading ? "—" : stats?.staffCount?.toLocaleString() ?? "0"} 
+                icon="ri-nurse-line" 
+                iconColor="secondary"
+                trend={{ value: 1.8, isPositive: true }}
+              />
+            )}
             
+            {/* Doctor sees patients under their care */}
+            {isDoctor && (
+              <StatCard 
+                title="My Patients" 
+                value="12" 
+                icon="ri-mental-health-line" 
+                iconColor="secondary"
+                trend={{ value: 2.0, isPositive: true }}
+              />
+            )}
+            
+            {/* Nurse sees assigned patients */}
+            {isNurse && (
+              <StatCard 
+                title="Assigned Patients" 
+                value="8" 
+                icon="ri-mental-health-line" 
+                iconColor="secondary"
+                trend={{ value: 1.5, isPositive: true }}
+              />
+            )}
+            
+            {/* All users see appointments */}
             <StatCard 
               title="Appointments" 
-              value={statsLoading ? "—" : stats?.appointmentCount.toLocaleString()} 
+              value={statsLoading ? "—" : stats?.appointmentCount?.toLocaleString() ?? "0"} 
               icon="ri-calendar-check-line" 
               iconColor="info"
               trend={{ value: 2.3, isPositive: false }}
             />
             
-            <StatCard 
-              title="Bed Occupancy" 
-              value={statsLoading ? "—" : `${stats?.bedOccupancy}%`} 
-              icon="ri-hotel-bed-line" 
-              iconColor="accent"
-              trend={{ value: 3.1, isPositive: true }}
-            />
+            {/* Admin sees bed occupancy */}
+            {isAdmin && (
+              <StatCard 
+                title="Bed Occupancy" 
+                value={statsLoading ? "—" : `${stats?.bedOccupancy ?? 0}%`} 
+                icon="ri-hotel-bed-line" 
+                iconColor="accent"
+                trend={{ value: 3.1, isPositive: true }}
+              />
+            )}
+            
+            {/* Doctor sees pending consultations */}
+            {isDoctor && (
+              <StatCard 
+                title="Pending Consults" 
+                value="5" 
+                icon="ri-stethoscope-line" 
+                iconColor="accent"
+                trend={{ value: 1.2, isPositive: false }}
+              />
+            )}
+            
+            {/* Nurse sees tasks */}
+            {isNurse && (
+              <StatCard 
+                title="Open Tasks" 
+                value="14" 
+                icon="ri-task-line" 
+                iconColor="accent"
+                trend={{ value: 2.8, isPositive: false }}
+              />
+            )}
+            
+            {/* Receptionist sees today's check-ins */}
+            {isReceptionist && (
+              <StatCard 
+                title="Today's Check-ins" 
+                value="18" 
+                icon="ri-check-double-line" 
+                iconColor="accent"
+                trend={{ value: 4.5, isPositive: true }}
+              />
+            )}
           </div>
           
           {/* Charts row */}
