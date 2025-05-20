@@ -13,6 +13,7 @@ import StaffPage from "@/pages/staff-page";
 import AppointmentsPage from "@/pages/appointments-page";
 import ReportsPage from "@/pages/reports-page";
 import SettingsPage from "@/pages/settings-page";
+import PrescriptionsPage from "@/pages/prescriptions-page";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/prescriptions" component={PrescriptionsPage} />
       <Route component={NotFound} />
     </Switch>
   );
