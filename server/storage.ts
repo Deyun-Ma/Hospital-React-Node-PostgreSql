@@ -273,13 +273,26 @@ export class DatabaseStorage implements IStorage {
       .select({ count: db.fn.count() })
       .from(appointments);
     
+    // Safely parse count results, defaulting to 0 if invalid
+    const patientCount = patientCountResult[0]?.count !== undefined 
+      ? Number(patientCountResult[0].count) || 0 
+      : 0;
+      
+    const staffCount = staffCountResult[0]?.count !== undefined 
+      ? Number(staffCountResult[0].count) || 0 
+      : 0;
+      
+    const appointmentCount = appointmentCountResult[0]?.count !== undefined 
+      ? Number(appointmentCountResult[0].count) || 0 
+      : 0;
+    
     // Bed occupancy is a placeholder value in this implementation
     // In a real system, you would calculate this from bed/room occupancy data
     
     return {
-      patientCount: parseInt(patientCountResult[0].count as string),
-      staffCount: parseInt(staffCountResult[0].count as string),
-      appointmentCount: parseInt(appointmentCountResult[0].count as string),
+      patientCount,
+      staffCount,
+      appointmentCount,
       bedOccupancy: 76, // Placeholder value
     };
   }
